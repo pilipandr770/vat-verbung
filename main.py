@@ -9,12 +9,19 @@ import logging
 import sys
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 # Fix Windows console encoding issues
 if sys.platform == 'win32':
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+# Auto-generate .env from Render environment variables if not present
+env_file = Path(__file__).parent / ".env"
+if not env_file.exists():
+    from setup_env import create_env_from_environment
+    create_env_from_environment()
 
 # Load environment variables first
 load_dotenv()
