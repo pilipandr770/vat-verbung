@@ -48,7 +48,15 @@ class Scheduler:
         
         self.linkedin_publisher = LinkedInPublisher()
         self.telegram_publisher = TelegramPublisher()
-        self.instagram_publisher = InstagramPublisher()
+        
+        # Instagram is optional - may fail due to IP blocks, etc.
+        self.instagram_publisher = None
+        try:
+            from channels.instagram.publisher import InstagramPublisher
+            self.instagram_publisher = InstagramPublisher()
+            logger.info("✅ Instagram publisher initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ Instagram publisher failed (will skip): {str(e)}")
         
         self._setup_jobs()
     
@@ -228,6 +236,10 @@ class Scheduler:
     
     def _publish_instagram(self) -> None:
         """Публікація контенту на Instagram."""
+        if not self.instagram_publisher:
+            logger.info("⏭️ Skipping Instagram publish (not available)")
+            return
+        
         try:
             logger.info("📸 Publishing to Instagram...")
             
@@ -275,6 +287,10 @@ class Scheduler:
     
     def _collect_instagram_audience(self) -> None:
         """Збір цільової аудиторії з Instagram."""
+        if not self.instagram_publisher:
+            logger.info("⏭️ Skipping Instagram audience collection (not available)")
+            return
+        
         try:
             logger.info("🔍 Collecting Instagram audience...")
             # TODO: Реалізація після інтеграції Instagram API
@@ -303,6 +319,10 @@ class Scheduler:
     
     def _invite_instagram(self) -> None:
         """Запрошення лідів на Instagram."""
+        if not self.instagram_publisher:
+            logger.info("⏭️ Skipping Instagram invitations (not available)")
+            return
+        
         try:
             logger.info("💬 Processing Instagram invitations...")
             # TODO: Реалізація після scoring та rules
