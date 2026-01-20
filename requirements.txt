@@ -1,0 +1,8 @@
+django
+requests
+psycopg2-binary
+python-dotenv
+APScheduler
+python-telegram-bot
+instagrapi
+linkedin-api
