@@ -122,8 +122,7 @@ class Scheduler:
             logger.info("📌 Publishing to LinkedIn...")
             
             # Генерація контенту
-            topic = self.content_engine.get_random_topic()
-            content_de = self.content_engine.generate_content(topic)
+            content_de, topic, ctype = self.content_engine.generate_content()
             content_adapted = self.content_adapter.adapt(content_de, "linkedin")
             
             # Збереження в БД
@@ -143,7 +142,7 @@ class Scheduler:
                     action_type=ActionType.POST_PUBLISHED,
                     channel="linkedin",
                     post_id=post.id,
-                    details={"topic": topic.value}
+                    details={"topic": topic.value, "type": ctype.value}
                 )
                 action.save()
                 logger.info(f"✅ LinkedIn post published (ID: {post.id})")
@@ -158,8 +157,7 @@ class Scheduler:
         try:
             logger.info("📱 Publishing to Telegram...")
             
-            topic = self.content_engine.get_random_topic()
-            content_de = self.content_engine.generate_content(topic)
+            content_de, topic, ctype = self.content_engine.generate_content()
             content_adapted = self.content_adapter.adapt(content_de, "telegram")
             
             post = Post(
@@ -177,7 +175,7 @@ class Scheduler:
                     action_type=ActionType.POST_PUBLISHED,
                     channel="telegram",
                     post_id=post.id,
-                    details={"topic": topic.value}
+                    details={"topic": topic.value, "type": ctype.value}
                 )
                 action.save()
                 logger.info(f"✅ Telegram post published (ID: {post.id})")
@@ -192,8 +190,7 @@ class Scheduler:
         try:
             logger.info("📸 Publishing to Instagram...")
             
-            topic = self.content_engine.get_random_topic()
-            content_de = self.content_engine.generate_content(topic)
+            content_de, topic, ctype = self.content_engine.generate_content()
             content_adapted = self.content_adapter.adapt(content_de, "instagram")
             
             post = Post(
@@ -211,7 +208,7 @@ class Scheduler:
                     action_type=ActionType.POST_PUBLISHED,
                     channel="instagram",
                     post_id=post.id,
-                    details={"topic": topic.value}
+                    details={"topic": topic.value, "type": ctype.value}
                 )
                 action.save()
                 logger.info(f"✅ Instagram post published (ID: {post.id})")
