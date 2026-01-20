@@ -35,11 +35,13 @@ class ContentAdapter:
     
     @staticmethod
     def _adapt_to_linkedin(content_de: str) -> str:
-        """Адаптація для LinkedIn (професійний тон, довгі пости)."""
+        """Адаптація для LinkedIn (професійний тон, довгі пості)."""
         return f"""
 🔍 B2B Insights
 
 {content_de}
+
+💼 Learn More: https://vat-verifizierung.de
 
 #B2B #DigitalTransformation #BusinessOptimization #Germany
 """.strip()
@@ -50,7 +52,8 @@ class ContentAdapter:
         return f"""
 📌 {content_de}
 
-🔗 Детальніше у нашому каналі
+🔗 Дізнайтеся більше: https://vat-verifizierung.de
+📞 Запишіться на консультацію або потрібна допомога?
 """.strip()
     
     @staticmethod
@@ -58,6 +61,8 @@ class ContentAdapter:
         """Адаптація для Instagram (візуальна, з hashtags)."""
         return f"""
 ✨ {content_de}
+
+👉 Link in bio for more info | DM us for details 💬
 
 #B2B #Automation #DigitalTransformation #BusinessGrowth
 """.strip()

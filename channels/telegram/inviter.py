@@ -1,6 +1,11 @@
 """
 Акуратне додавання / контакт.
 Без масових розсилок.
+
+Features:
+- Day/Night mode: Only invites during 9:00-18:00
+- Random messages: 5 templates per bio type
+- Random delays: 3-5 minutes between invites (natural behavior)
 """
 
 import os
@@ -9,6 +14,8 @@ import logging
 from typing import Dict
 from telegram import Bot
 from telegram.error import TelegramError
+from core.work_hours import WorkHoursManager
+from core.message_templates import TelegramMessageTemplates
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +27,7 @@ class TelegramInviter:
         """Ініціалізація Telegram inviter."""
         self.platform = "telegram"
         self.bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+        self.work_hours = WorkHoursManager()
         
         if not self.bot_token:
             raise ValueError("TELEGRAM_BOT_TOKEN має бути встановлена")
@@ -31,6 +39,11 @@ class TelegramInviter:
         """
         Відправляє персоналізоване запрошення.
         
+        Features:
+        - Only runs during work hours (9-18 by default)
+        - Uses random message templates (5 variants)
+        - Uses random delays between 3-5 minutes
+        
         Args:
             user_id: ID користувача
             username: Username користувача
@@ -40,15 +53,29 @@ class TelegramInviter:
             Dict з результатом відправки
         """
         try:
-            message = self._create_personalized_message(username, bio)
+            # Check work hours
+            if not self.work_hours.is_work_hours():
+                logger.info(f"⏰ Outside work hours: skipping {username}")
+                return {
+                    "success": False,
+                    "user_id": user_id,
+                    "username": username,
+                    "error": "Outside work hours (9:00-18:00)",
+                    "time_blocked": True,
+                }
+            
+            # Get random message template (5 variants available)
+            message = TelegramMessageTemplates.get_random_template(username, bio)
             
             logger.info(f"Sending invite to: {username} (ID: {user_id})")
             
             # Відправка повідомлення
             self.bot.send_message(chat_id=user_id, text=message)
             
-            # Затримка для природної поведінки
-            time.sleep(self.message_delay)
+            # Random delay between 3-5 minutes for natural behavior
+            delay = self.work_hours.random_delay_between_invites()
+            logger.info(f"⏱️ Waiting {delay:.0f}s ({delay/60:.1f}min) before next invite")
+            time.sleep(delay)
             
             logger.info(f"✅ Invite sent to: {username}")
             

@@ -1,12 +1,19 @@
 """
 Follow / акуратний контакт.
 Одноразово, без агресивних DM.
+
+Features:
+- Day/Night mode: Only invites during 9:00-18:00
+- Random messages: 5 templates per bio type
+- Random delays: 3-5 minutes between invites (natural behavior)
 """
 
 import time
 import logging
 from typing import Dict, Optional
 from instagrapi import Client
+from core.work_hours import WorkHoursManager
+from core.message_templates import InstagramMessageTemplates
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +25,7 @@ class InstagramInviter:
         """Ініціалізація Instagram inviter."""
         self.platform = "instagram"
         self.client = Client()
+        self.work_hours = WorkHoursManager()
         
         # Затримка між діями (в секундах) для уникнення банування
         self.follow_delay = 10  # 10 секунд між follows
@@ -86,6 +94,11 @@ class InstagramInviter:
         """
         Комплексне запрошення: follow + DM (якщо релевантно).
         
+        Features:
+        - Only runs during work hours (9-18 by default)
+        - Uses random message templates (5 variants)
+        - Uses random delays between 3-5 minutes
+        
         Args:
             user_id: ID користувача
             username: Username
@@ -93,9 +106,15 @@ class InstagramInviter:
             is_b2b: Чи це B2B-профіль
             
         Returns:
-            Dict з результатами: {follow: bool, dm: bool}
+            Dict з результатами: {follow: bool, dm: bool, time_blocked: bool}
         """
-        result = {"follow": False, "dm": False}
+        result = {"follow": False, "dm": False, "time_blocked": False}
+        
+        # Check work hours
+        if not self.work_hours.is_work_hours():
+            logger.info(f"⏰ Outside work hours: skipping {username}")
+            result["time_blocked"] = True
+            return result
         
         if not is_b2b:
             logger.info(f"Skipping {username}: not B2B relevant")
@@ -108,18 +127,14 @@ class InstagramInviter:
             logger.warning(f"Skipping DM for {username} due to follow failure")
             return result
         
-        # 2. Персоналізоване DM (обережно, один раз!)
-        # Витягуємо B2B-ключові слова з bio для персоналізації
-        b2b_keywords = ["business", "marketing", "sales", "management", "digital"]
-        relevant_keywords = [kw for kw in b2b_keywords if kw in bio.lower()]
+        # 2. Персоналізоване DM з випадковим шаблоном (5 варіантів)
+        message = InstagramMessageTemplates.get_random_template(username, bio)
         
-        if relevant_keywords:
-            message = self._create_personalized_message(username, relevant_keywords)
-        else:
-            message = self._create_default_message()
+        # Затримка перед DM (випадково 3-5 хвилин)
+        delay = self.work_hours.random_delay_between_invites()
+        logger.info(f"⏱️ Waiting {delay:.0f}s ({delay/60:.1f}min) before DM to {username}")
+        time.sleep(delay)
         
-        # Затримка перед DM
-        time.sleep(5)
         result["dm"] = self.send_dm(user_id, username, message)
         
         return result

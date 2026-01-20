@@ -23,6 +23,7 @@ class TelegramPublisher:
         if not self.bot_token or not self.channel_id:
             raise ValueError("TELEGRAM_BOT_TOKEN та TELEGRAM_CHANNEL_ID мають бути встановлені")
         
+        # Use default Bot initialization (compatible with python-telegram-bot 20.7+)
         self.bot = Bot(token=self.bot_token)
     
     def publish_post(

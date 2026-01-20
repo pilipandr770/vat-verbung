@@ -4,19 +4,32 @@
 - коли публікувати контент
 - коли запускати збір ЦА
 - коли запускати запрошення
+
+Features:
+- Day/Night mode: 9:00-18:00 work hours
+- Publications: Only during work hours
+- Invitations: Only during work hours  
+- Random messages: 5 templates per channel
+- Random delays: 3-5 minutes between invites
 """
 
 import logging
+import os
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from dotenv import load_dotenv
 
 from core.content_engine import ContentEngine
 from core.content_adapter import ContentAdapter
 from core.models import Post, Action, ActionType, Log
+from core.cleanup import ContentCleanupManager
+from core.work_hours import WorkHoursManager, PublicationScheduler
 from channels.linkedin.publisher import LinkedInPublisher
 from channels.telegram.publisher import TelegramPublisher
 from channels.instagram.publisher import InstagramPublisher
+
+load_dotenv()
 
 
 logger = logging.getLogger(__name__)
@@ -30,6 +43,8 @@ class Scheduler:
         self.scheduler = BackgroundScheduler()
         self.content_engine = ContentEngine()
         self.content_adapter = ContentAdapter()
+        self.work_hours = WorkHoursManager()
+        self.publication_scheduler = PublicationScheduler()
         
         self.linkedin_publisher = LinkedInPublisher()
         self.telegram_publisher = TelegramPublisher()
@@ -40,24 +55,26 @@ class Scheduler:
     def _setup_jobs(self) -> None:
         """Налаштування jobs для scheduler."""
         
-        # LinkedIn: 2 пости на день (08:00, 14:00 CET)
+        logger.info(f"🕐 Work hours: {self.work_hours.work_hours_start}:00-{self.work_hours.work_hours_end}:00")
+        
+        # LinkedIn: 2 пості на день (10:00, 15:00 - within work hours)
         self.scheduler.add_job(
             self._publish_linkedin,
-            CronTrigger(hour=8, minute=0),
+            CronTrigger(hour=10, minute=0),
             id='linkedin_publish_morning',
             name='LinkedIn publish morning',
             replace_existing=True,
         )
         self.scheduler.add_job(
             self._publish_linkedin,
-            CronTrigger(hour=14, minute=0),
+            CronTrigger(hour=15, minute=0),
             id='linkedin_publish_afternoon',
             name='LinkedIn publish afternoon',
             replace_existing=True,
         )
         
-        # Telegram: 5 постів на день (розподілено)
-        times = [(9, 0), (11, 30), (14, 0), (17, 0), (19, 30)]
+        # Telegram: 3 пості на день (9:30, 13:00, 17:30 - within work hours)
+        times = [(9, 30), (13, 0), (17, 30)]
         for i, (hour, minute) in enumerate(times):
             self.scheduler.add_job(
                 self._publish_telegram,
@@ -67,8 +84,8 @@ class Scheduler:
                 replace_existing=True,
             )
         
-        # Instagram: 3 пості на день (09:00, 13:00, 19:00 CET)
-        times = [(9, 0), (13, 0), (19, 0)]
+        # Instagram: 3 пості на день (9:00, 13:00, 17:00 - within work hours)
+        times = [(9, 0), (13, 0), (17, 0)]
         for i, (hour, minute) in enumerate(times):
             self.scheduler.add_job(
                 self._publish_instagram,
@@ -113,6 +130,30 @@ class Scheduler:
             name='Instagram invite',
             replace_existing=True,
         )
+        
+        # Daily cleanup: Delete old published posts (prevents database bloat)
+        cleanup_enabled = os.getenv("CLEANUP_ENABLED", "True").lower() == "true"
+        if cleanup_enabled:
+            cleanup_time = os.getenv("CLEANUP_TIME", "02:00")  # Default: 2:00 AM UTC
+            try:
+                hour, minute = map(int, cleanup_time.split(":"))
+                self.scheduler.add_job(
+                    self._cleanup_old_posts,
+                    CronTrigger(hour=hour, minute=minute),
+                    id='daily_cleanup',
+                    name='Daily cleanup of old published posts',
+                    replace_existing=True,
+                )
+                logger.info(f"✅ Cleanup job scheduled for {cleanup_time} UTC")
+            except ValueError:
+                logger.warning(f"Invalid CLEANUP_TIME format: {cleanup_time}. Using default 02:00")
+                self.scheduler.add_job(
+                    self._cleanup_old_posts,
+                    CronTrigger(hour=2, minute=0),
+                    id='daily_cleanup',
+                    name='Daily cleanup of old published posts',
+                    replace_existing=True,
+                )
         
         logger.info("Jobs configured successfully")
     
@@ -273,6 +314,64 @@ class Scheduler:
             action.save()
         except Exception as e:
             logger.error(f"Instagram invite error: {e}", exc_info=True)
+    
+    def _cleanup_old_posts(self) -> None:
+        """Видалення старих опублікованих постів для запобігання переповненню БД."""
+        try:
+            logger.info("🗑️  Running daily cleanup of old published posts...")
+            
+            # Отримати налаштування утримання з .env
+            retention_days = int(os.getenv("POST_RETENTION_DAYS", "30"))
+            
+            # Отримати поточну статистику перед очисткою
+            stats_before = ContentCleanupManager.get_cleanup_stats()
+            logger.info(
+                f"📊 Database stats BEFORE cleanup: "
+                f"Total posts: {stats_before.get('total_posts', 0)}, "
+                f"Published: {stats_before.get('published_posts', 0)}"
+            )
+            
+            # Виконати очистку
+            result = ContentCleanupManager.delete_old_published_posts(
+                days_to_keep=retention_days,
+                verbose=True
+            )
+            
+            # Отримати статистику після очистки
+            stats_after = ContentCleanupManager.get_cleanup_stats()
+            logger.info(
+                f"📊 Database stats AFTER cleanup: "
+                f"Total posts: {stats_after.get('total_posts', 0)}, "
+                f"Published: {stats_after.get('published_posts', 0)}"
+            )
+            
+            # Зберегти результат в логи
+            action = Action(
+                action_type=ActionType.POST_PUBLISHED,  # Переиспользуем для системных операций
+                channel="system",
+                details={
+                    "operation": "cleanup",
+                    "deleted_posts": result.get('deleted_posts', 0),
+                    "deleted_actions": result.get('deleted_actions', 0),
+                    "retention_days": retention_days,
+                    "posts_before": stats_before.get('total_posts', 0),
+                    "posts_after": stats_after.get('total_posts', 0)
+                }
+            )
+            action.save()
+            
+            if result['status'] == 'success':
+                logger.info(
+                    f"✅ Cleanup completed: "
+                    f"Deleted {result.get('deleted_posts', 0)} posts, "
+                    f"{result.get('deleted_actions', 0)} actions "
+                    f"(older than {retention_days} days)"
+                )
+            else:
+                logger.error(f"❌ Cleanup failed: {result.get('message', 'Unknown error')}")
+        
+        except Exception as e:
+            logger.error(f"Cleanup job error: {e}", exc_info=True)
     
     def run(self) -> None:
         """Запуск scheduler."""

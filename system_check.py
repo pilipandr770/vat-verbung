@@ -39,6 +39,7 @@ class SystemCheck:
         self.check_env_file()
         self.check_database()
         self.check_social_credentials()
+        self.check_ai_configuration()
         self.check_files_and_dirs()
         self.check_dependencies()
         
@@ -164,7 +165,10 @@ class SystemCheck:
             ('apscheduler', 'Scheduler'),
             ('telegram', 'Telegram'),
             ('instagrapi', 'Instagram'),
-            ('playwright', 'LinkedIn')
+            ('playwright', 'LinkedIn'),
+            ('openai', 'OpenAI (Optional)'),
+            ('google.generativeai', 'Gemini (Optional)'),
+            ('PIL', 'Image processing (Optional)')
         ]
         
         for module, name in dependencies:
@@ -173,7 +177,51 @@ class SystemCheck:
                 logger.info(f"   ✅ {name} ({module})")
                 self.success_count += 1
             except ImportError:
-                self.errors.append(f"{name} ({module}) not installed")
+                if '(Optional)' in name:
+                    self.warnings.append(f"{name} ({module}) not installed - AI features disabled")
+                else:
+                    self.errors.append(f"{name} ({module}) not installed")
+    
+    def check_ai_configuration(self):
+        """Check AI configuration"""
+        logger.info("\n🤖 Checking AI Configuration...")
+        
+        use_ai = os.getenv('USE_AI_CONTENT', 'False').lower() == 'true'
+        
+        if not use_ai:
+            logger.info(f"   ℹ️  AI content generation disabled (USE_AI_CONTENT=False)")
+            self.success_count += 1
+            return
+        
+        ai_provider = os.getenv('AI_PROVIDER', '').lower()
+        
+        if ai_provider == 'openai':
+            api_key = os.getenv('OPENAI_API_KEY', '')
+            if api_key and api_key.startswith('sk-'):
+                logger.info(f"   ✅ OpenAI API key configured")
+                self.success_count += 1
+            else:
+                self.warnings.append("OpenAI API key not configured (USE_AI_CONTENT=True but no key)")
+        
+        elif ai_provider == 'gemini':
+            api_key = os.getenv('GEMINI_API_KEY', '')
+            if api_key:
+                logger.info(f"   ✅ Gemini API key configured")
+                self.success_count += 1
+            else:
+                self.warnings.append("Gemini API key not configured (USE_AI_CONTENT=True but no key)")
+        
+        else:
+            self.warnings.append(f"Unknown AI_PROVIDER: {ai_provider}")
+        
+        # Check image generation
+        image_api_key = os.getenv('DALLE_API_KEY', '')
+        if image_api_key and image_api_key.startswith('sk-'):
+            logger.info(f"   ✅ DALL-E API key configured")
+            self.success_count += 1
+        else:
+            logger.info(f"   ℹ️  DALL-E not configured (images will use placeholders)")
+
     
     def print_summary(self):
         """Print check summary"""

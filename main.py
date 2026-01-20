@@ -10,6 +10,12 @@ import sys
 import os
 from dotenv import load_dotenv
 
+# Fix Windows console encoding issues
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 # Load environment variables first
 load_dotenv()
 
@@ -20,13 +26,25 @@ log_file = os.getenv('LOG_FILE', 'logs/promotion_hub.log')
 # Ensure logs directory exists
 os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
+# Create custom stream handler that handles Unicode
+class UnicodeStreamHandler(logging.StreamHandler):
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            # Replace emojis with [emoji]
+            msg = msg.replace('✅', '[OK]').replace('🤖', '[BOT]').replace('🔍', '[SEARCH]')
+            self.stream.write(msg + '\n')
+            self.flush()
+        except Exception:
+            self.handleError(record)
+
 # Configure logging
 logging.basicConfig(
     level=getattr(logging, log_level),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(log_file),
-        logging.StreamHandler(sys.stdout)
+        logging.FileHandler(log_file, encoding='utf-8'),
+        UnicodeStreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
