@@ -75,6 +75,12 @@ def main():
     print_banner()
     
     try:
+        # Step 0: Start health check server for Render
+        logger.info("🏥 Starting health check server...")
+        from core.health_check import start_health_check_server
+        health_port = int(os.getenv("HEALTH_CHECK_PORT", "5000"))
+        start_health_check_server(health_port)
+        
         # Step 1: System check
         logger.info("🔍 Running pre-flight checks...")
         from system_check import SystemCheck
@@ -109,6 +115,7 @@ def main():
         logger.info("   • Press Ctrl+C to stop gracefully")
         logger.info("   • Check logs/promotion_hub.log for details")
         logger.info("   • Monitor database with SQL client")
+        logger.info(f"   • Health check available at http://localhost:{health_port}/health")
         logger.info("=" * 60 + "\n")
         
         # Run scheduler (blocking)

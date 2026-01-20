@@ -32,6 +32,8 @@ services:
         value: INFO
       - key: DEBUG
         value: "False"
+      - key: HEALTH_CHECK_PORT
+        value: "5000"
       - key: SCHEDULER_ENABLED
         value: "True"
       - key: SCHEDULER_TIMEZONE
