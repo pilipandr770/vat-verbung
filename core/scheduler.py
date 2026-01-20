@@ -209,30 +209,6 @@ class Scheduler:
         
         except Exception as e:
             logger.error(f"LinkedIn publish error: {e}", exc_info=True)
-                channel="linkedin",
-                content_de=content_de,
-                content_adapted=content_adapted,
-            )
-            post.save()
-            
-            # Публікація
-            success = self.linkedin_publisher.publish_post(content_adapted)
-            
-            if success:
-                post.mark_published()
-                action = Action(
-                    action_type=ActionType.POST_PUBLISHED,
-                    channel="linkedin",
-                    post_id=post.id,
-                    details={"topic": topic.value, "type": ctype.value}
-                )
-                action.save()
-                logger.info(f"✅ LinkedIn post published (ID: {post.id})")
-            else:
-                logger.warning("❌ LinkedIn post failed")
-        
-        except Exception as e:
-            logger.error(f"LinkedIn publish error: {e}", exc_info=True)
     
     def _publish_telegram(self) -> None:
         """Публікація контенту на Telegram."""
