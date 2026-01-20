@@ -299,28 +299,6 @@ class Scheduler:
         
         except Exception as e:
             logger.error(f"Instagram publish error: {e}", exc_info=True)
-                content_de=content_de,
-                content_adapted=content_adapted,
-            )
-            post.save()
-            
-            success = self.instagram_publisher.publish_post(content_adapted)
-            
-            if success:
-                post.mark_published()
-                action = Action(
-                    action_type=ActionType.POST_PUBLISHED,
-                    channel="instagram",
-                    post_id=post.id,
-                    details={"topic": topic.value, "type": ctype.value}
-                )
-                action.save()
-                logger.info(f"✅ Instagram post published (ID: {post.id})")
-            else:
-                logger.warning("❌ Instagram post failed")
-        
-        except Exception as e:
-            logger.error(f"Instagram publish error: {e}", exc_info=True)
     
     def _collect_telegram_audience(self) -> None:
         """Збір цільової аудиторії з Telegram."""
