@@ -16,7 +16,6 @@ from typing import Dict, List, Tuple, Optional
 from enum import Enum
 
 from core.models import Post, ActionType
-from core.db import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -393,62 +392,3 @@ class ContentGenerator:
             "🚀 Ускорьте рост своего бизнеса с нами",
         ]
         return random.choice(ctas)
-    
-    def save_generated_content(self, content: Dict[str, str]) -> Post:
-        """
-        Сохранить сгенерированный контент в БД.
-        
-        Args:
-            content: Словарь с контентом
-            
-        Returns:
-            Post объект из БД
-        """
-        db = get_db()
-        try:
-            post = Post(
-                title=content.get("title", ""),
-                description=content.get("description", ""),
-                platform="multi",
-                status="published",
-                created_at=datetime.now(),
-            )
-            db.add(post)
-            db.commit()
-            db.refresh(post)
-            logger.info(f"✅ Контент сохранён в БД: {post.id}")
-            return post
-        except Exception as e:
-            logger.error(f"❌ Ошибка при сохранении контента: {e}")
-            db.rollback()
-            return None
-        finally:
-            db.close()
-    
-    def get_content_for_publication(self) -> Optional[Dict[str, str]]:
-        """
-        Получить контент для публикации.
-        Если есть в БД - взять оттуда, если нет - сгенерировать.
-        
-        Returns:
-            Dict с контентом для публикации
-        """
-        # Сначала проверим, есть ли непубликованный контент в БД
-        db = get_db()
-        try:
-            unpublished = db.query(Post).filter(
-                Post.status == "generated",
-                Post.platform == "multi"
-            ).first()
-            
-            if unpublished:
-                return {
-                    "title": unpublished.title,
-                    "description": unpublished.description,
-                    "id": unpublished.id,
-                }
-        finally:
-            db.close()
-        
-        # Если нет - сгенерировать новый
-        return self.generate_content()
