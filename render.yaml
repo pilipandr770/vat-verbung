@@ -1,0 +1,83 @@
+services:
+  - type: cron
+    name: promotion-hub-scheduler
+    runtime: python310
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.13
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHANNEL_ID
+        sync: false
+      - key: INSTAGRAM_SESSION
+        sync: false
+      - key: INSTAGRAM_USERNAME
+        sync: false
+      - key: INSTAGRAM_PASSWORD
+        sync: false
+      - key: LINKEDIN_USERNAME
+        sync: false
+      - key: LINKEDIN_PASSWORD
+        sync: false
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DEBUG
+        value: "False"
+      - key: SCHEDULER_ENABLED
+        value: "True"
+      - key: SCHEDULER_TIMEZONE
+        value: Europe/Berlin
+      - key: WORK_HOURS_START
+        value: "9"
+      - key: WORK_HOURS_END
+        value: "18"
+      - key: TIMEZONE
+        value: Europe/Berlin
+      - key: WORK_HOURS_ENABLED
+        value: "True"
+      - key: INSTAGRAM_POSTS_PER_DAY
+        value: "3"
+      - key: TELEGRAM_POSTS_PER_DAY
+        value: "3"
+      - key: LINKEDIN_POSTS_PER_DAY
+        value: "2"
+      - key: INVITATION_DELAY_MIN
+        value: "180"
+      - key: INVITATION_DELAY_MAX
+        value: "300"
+      - key: USE_RANDOM_MESSAGES
+        value: "True"
+      - key: MESSAGE_TEMPLATE_VARIANTS
+        value: "5"
+      - key: CONTENT_LANGUAGE
+        value: DE
+      - key: POST_RETENTION_DAYS
+        value: "30"
+      - key: CLEANUP_ENABLED
+        value: "True"
+      - key: CLEANUP_TIME
+        value: "02:00"
+      - key: MAX_LEADS_PER_JOB
+        value: "50"
+      - key: SCORE_THRESHOLD_INVITE
+        value: "0.6"
+      - key: SCORE_THRESHOLD_SAVE
+        value: "0.3"
+      - key: MAX_INVITES_PER_LEAD
+        value: "1"
+      - key: AI_PROVIDER
+        value: openai
+      - key: AI_MODEL
+        value: gpt-3.5-turbo
+      - key: IMAGE_MODEL
+        value: dall-e-3
+      - key: USE_AI_CONTENT
+        value: "True"
