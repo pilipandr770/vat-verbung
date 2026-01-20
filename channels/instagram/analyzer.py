@@ -3,6 +3,11 @@
 Визначення B2B-релевантності.
 """
 
+import logging
+from typing import Dict, Tuple
+
+logger = logging.getLogger(__name__)
+
 
 class InstagramAnalyzer:
     """Аналізує лідів з Instagram."""
@@ -10,32 +15,120 @@ class InstagramAnalyzer:
     def __init__(self):
         """Ініціалізація Instagram analyzer."""
         self.platform = "instagram"
+        self.b2b_keywords = {
+            "business", "company", "enterprise", "b2b", "b2c",
+            "solutions", "services", "digital", "marketing",
+            "consulting", "agency", "management", "software",
+            "technology", "IT", "data", "analytics", "automation",
+            "entrepreneur", "ceo", "founder", "owner", "director",
+            "manager", "professional", "expert", "specialist",
+        }
     
     def analyze_profile(
         self,
         user_id: str,
+        username: str,
         bio: str,
-        post_count: int,
         follower_count: int,
-        recent_comments: list,
-    ) -> dict:
+        following_count: int,
+        is_private: bool,
+        is_business: bool = False,
+        media_count: int = 0,
+    ) -> Dict:
         """
-        Аналізує профіль.
+        Аналізує профіль користувача.
         
         Args:
             user_id: ID користувача
+            username: Username
             bio: Bio профілю
-            post_count: Кількість постів
             follower_count: Кількість підписників
-            recent_comments: Недавні коментарі
+            following_count: Кількість підписок
+            is_private: Чи приватний акаунт
+            is_business: Чи це бізнес-акаунт
+            media_count: Кількість постів
             
         Returns:
-            Результат аналізу з скором
+            Результат аналізу з скором і рекомендацією
         """
-        # TODO: Реалізація
+        score = 0.0
+        reasons = []
+        
+        # 1. Аналіз bio на B2B-ключові слова
+        bio_lower = bio.lower()
+        b2b_keyword_count = sum(1 for kw in self.b2b_keywords if kw in bio_lower)
+        
+        if b2b_keyword_count >= 3:
+            score += 0.4
+            reasons.append(f"Bio contains {b2b_keyword_count} B2B keywords")
+        elif b2b_keyword_count >= 1:
+            score += 0.2
+            reasons.append(f"Bio contains {b2b_keyword_count} B2B keyword(s)")
+        
+        # 2. Профіль активності (followers/following ratio)
+        if follower_count > 0 and following_count > 0:
+            ratio = follower_count / following_count
+            if ratio > 1.5:  # Більше підписників, ніж підписок
+                score += 0.2
+                reasons.append("Good follower/following ratio")
+            elif ratio > 0.8:
+                score += 0.1
+        
+        # 3. Мінімальна активність
+        if media_count >= 10:
+            score += 0.1
+            reasons.append("Active profile (10+ posts)")
+        elif media_count >= 3:
+            score += 0.05
+        
+        # 4. Бізнес-акаунт
+        if is_business:
+            score += 0.15
+            reasons.append("Business account")
+        
+        # 5. Достатньо підписників (але не мега-блогер)
+        if 100 <= follower_count <= 100000:
+            score += 0.1
+            reasons.append("Moderate follower count")
+        elif follower_count < 50:
+            score -= 0.05
+            reasons.append("Very few followers (potential newbie)")
+        
+        # 6. Публічний акаунт (легше проаналізувати)
+        if not is_private:
+            score += 0.05
+            reasons.append("Public profile")
+        
+        # Нормалізація скору (0-1)
+        score = min(1.0, max(0.0, score))
+        
+        # Визначення рекомендації
+        is_b2b = b2b_keyword_count >= 1 or is_business
+        
         return {
             "user_id": user_id,
-            "score": 0.0,
-            "is_b2b": False,
-            "reason": "",
+            "username": username,
+            "score": score,
+            "is_b2b": is_b2b,
+            "reasons": reasons,
+            "recommendation": self._get_recommendation(score, is_b2b),
         }
+    
+    @staticmethod
+    def _get_recommendation(score: float, is_b2b: bool) -> str:
+        """
+        Визначає рекомендацію на основі скору.
+        
+        Args:
+            score: Скор релевантності (0-1)
+            is_b2b: Чи це B2B-профіль
+            
+        Returns:
+            Рекомендація: INVITE, SAVE, SKIP
+        """
+        if is_b2b and score >= 0.6:
+            return "INVITE"
+        elif score >= 0.4:
+            return "SAVE"
+        else:
+            return "SKIP"
