@@ -21,6 +21,7 @@ from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 
 from core.content_engine import ContentEngine
+from core.content_generator import ContentGenerator
 from core.content_adapter import ContentAdapter
 from core.models import Post, Action, ActionType, Log
 from core.cleanup import ContentCleanupManager
@@ -42,6 +43,7 @@ class Scheduler:
         """Ініціалізація scheduler."""
         self.scheduler = BackgroundScheduler()
         self.content_engine = ContentEngine()
+        self.content_generator = ContentGenerator()  # Новый циклический генератор
         self.content_adapter = ContentAdapter()
         self.work_hours = WorkHoursManager()
         self.publication_scheduler = PublicationScheduler()
@@ -170,12 +172,43 @@ class Scheduler:
         try:
             logger.info("📌 Publishing to LinkedIn...")
             
-            # Генерація контенту
-            content_de, topic, ctype = self.content_engine.generate_content()
-            content_adapted = self.content_adapter.adapt(content_de, "linkedin")
+            # Генерація нового контенту з циклічним генератором (30 тем)
+            generated_content = self.content_generator.generate_content()
+            title = generated_content.get("title", "")
+            description = generated_content.get("description", "")
+            theme = generated_content.get("theme", "")
             
             # Збереження в БД
             post = Post(
+                channel="linkedin",
+                title=title,
+                description=description,
+                theme=theme,
+                status="published",
+                created_at=datetime.now(),
+            )
+            post.save()
+            
+            # Публікація на LinkedIn
+            success = self.linkedin_publisher.publish_post({
+                "title": title,
+                "description": description
+            })
+            
+            if success:
+                logger.info(f"✅ LinkedIn post published (ID: {post.id}) - Theme: {theme}")
+                action = Action(
+                    action_type=ActionType.POST_PUBLISHED,
+                    channel="linkedin",
+                    post_id=post.id,
+                    details={"theme": theme}
+                )
+                action.save()
+            else:
+                logger.warning("❌ LinkedIn post failed")
+        
+        except Exception as e:
+            logger.error(f"LinkedIn publish error: {e}", exc_info=True)
                 channel="linkedin",
                 content_de=content_de,
                 content_adapted=content_adapted,
@@ -206,28 +239,38 @@ class Scheduler:
         try:
             logger.info("📱 Publishing to Telegram...")
             
-            content_de, topic, ctype = self.content_engine.generate_content()
-            content_adapted = self.content_adapter.adapt(content_de, "telegram")
+            # Генерація нового контенту з циклічним генератором
+            generated_content = self.content_generator.generate_content()
+            title = generated_content.get("title", "")
+            description = generated_content.get("description", "")
+            theme = generated_content.get("theme", "")
             
+            # Збереження в БД
             post = Post(
                 channel="telegram",
-                content_de=content_de,
-                content_adapted=content_adapted,
+                title=title,
+                description=description,
+                theme=theme,
+                status="published",
+                created_at=datetime.now(),
             )
             post.save()
             
-            success = self.telegram_publisher.publish_post(content_adapted)
+            # Публікація на Telegram
+            success = self.telegram_publisher.publish_post({
+                "title": title,
+                "description": description
+            })
             
             if success:
-                post.mark_published()
+                logger.info(f"✅ Telegram post published (ID: {post.id}) - Theme: {theme}")
                 action = Action(
                     action_type=ActionType.POST_PUBLISHED,
                     channel="telegram",
                     post_id=post.id,
-                    details={"topic": topic.value, "type": ctype.value}
+                    details={"theme": theme}
                 )
                 action.save()
-                logger.info(f"✅ Telegram post published (ID: {post.id})")
             else:
                 logger.warning("❌ Telegram post failed")
         
@@ -243,11 +286,43 @@ class Scheduler:
         try:
             logger.info("📸 Publishing to Instagram...")
             
-            content_de, topic, ctype = self.content_engine.generate_content()
-            content_adapted = self.content_adapter.adapt(content_de, "instagram")
+            # Генерація нового контенту з циклічним генератором
+            generated_content = self.content_generator.generate_content()
+            title = generated_content.get("title", "")
+            description = generated_content.get("description", "")
+            theme = generated_content.get("theme", "")
             
+            # Збереження в БД
             post = Post(
                 channel="instagram",
+                title=title,
+                description=description,
+                theme=theme,
+                status="published",
+                created_at=datetime.now(),
+            )
+            post.save()
+            
+            # Публікація на Instagram
+            success = self.instagram_publisher.publish_post({
+                "title": title,
+                "description": description
+            })
+            
+            if success:
+                logger.info(f"✅ Instagram post published (ID: {post.id}) - Theme: {theme}")
+                action = Action(
+                    action_type=ActionType.POST_PUBLISHED,
+                    channel="instagram",
+                    post_id=post.id,
+                    details={"theme": theme}
+                )
+                action.save()
+            else:
+                logger.warning("❌ Instagram post failed")
+        
+        except Exception as e:
+            logger.error(f"Instagram publish error: {e}", exc_info=True)
                 content_de=content_de,
                 content_adapted=content_adapted,
             )
