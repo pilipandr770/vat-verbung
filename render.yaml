@@ -1,9 +1,10 @@
 services:
   - type: cron
     name: promotion-hub-scheduler
-    runtime: python310
+    runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
+    schedule: "*/30 * * * *"
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.13
