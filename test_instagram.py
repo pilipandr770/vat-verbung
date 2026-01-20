@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 Instagram Session Loader & Tester
-Loads saved Instagram session and tests connection
+Loads Instagram session from .env and tests connection
 """
 
 import os
-import pickle
+import json
+import base64
 import logging
-from pathlib import Path
 from dotenv import load_dotenv
 from instagrapi import Client
 
@@ -23,26 +23,25 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 def load_instagram_session():
-    """Load Instagram session from file"""
+    """Load Instagram session from .env"""
     
-    session_file = os.getenv('INSTAGRAM_SESSION_FILE', 'instagram_session.pkl')
-    session_path = Path(session_file)
+    session_b64 = os.getenv('INSTAGRAM_SESSION')
     
-    if not session_path.exists():
-        logger.error(f"❌ Session file not found: {session_file}")
+    if not session_b64:
+        logger.error(f"❌ INSTAGRAM_SESSION not found in .env")
         logger.info("📝 Run: python init_instagram.py")
         return None
     
-    logger.info(f"📂 Loading session from {session_file}...")
+    logger.info(f"📂 Loading session from .env...")
     
     try:
         cl = Client()
         
-        # Load session
-        with open(session_path, 'rb') as f:
-            session_data = pickle.load(f)
-        
+        # Decode and load session
+        session_json = base64.b64decode(session_b64).decode()
+        session_data = json.loads(session_json)
         cl.set_settings(session_data)
+        
         logger.info("✅ Session loaded!")
         
         # Test connection

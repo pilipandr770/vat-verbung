@@ -115,14 +115,14 @@ class SystemCheck:
         
         # Instagram
         ig_user = os.getenv('INSTAGRAM_USERNAME')
-        ig_session = os.getenv('INSTAGRAM_SESSION_FILE')
+        ig_session = os.getenv('INSTAGRAM_SESSION')
         if ig_user and not ig_user.startswith('your_'):
             logger.info(f"   ✅ Instagram: {ig_user}")
             self.success_count += 1
             
             # Check if session exists
-            if Path(ig_session).exists():
-                logger.info(f"   ✅ Instagram session found")
+            if ig_session:
+                logger.info(f"   ✅ Instagram session found (.env)")
                 self.success_count += 1
             else:
                 self.warnings.append(f"Instagram session not found (run: python init_instagram.py)")
