@@ -55,19 +55,12 @@ class Scheduler:
         self.linkedin_publisher = LinkedInPublisher()
         self.telegram_publisher = TelegramPublisher()
         
-        # Instagram - try Graph API first (no IP blocking), fallback to instagrapi
+        # Instagram - use instagrapi (will work on VPS with residential IP)
         self.instagram_publisher = None
         try:
-            # Try Graph API (preferred - no IP blocks)
-            if os.getenv("META_ACCESS_TOKEN") and os.getenv("INSTAGRAM_BUSINESS_ACCOUNT_ID"):
-                from channels.instagram.graph_api_publisher import InstagramGraphAPIPublisher
-                self.instagram_publisher = InstagramGraphAPIPublisher()
-                logger.info("✅ Instagram Graph API publisher initialized")
-            else:
-                # Fallback to instagrapi
-                from channels.instagram.publisher import InstagramPublisher
-                self.instagram_publisher = InstagramPublisher()
-                logger.info("✅ Instagram instagrapi publisher initialized")
+            from channels.instagram.publisher import InstagramPublisher
+            self.instagram_publisher = InstagramPublisher()
+            logger.info("✅ Instagram instagrapi publisher initialized")
         except Exception as e:
             logger.warning(f"⚠️ Instagram publisher failed (will skip): {str(e)}")
         
