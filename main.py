@@ -75,12 +75,6 @@ def main():
     print_banner()
     
     try:
-        # Step 0: Start health check server for Render
-        logger.info("🏥 Starting health check server...")
-        from core.health_check import start_health_check_server
-        health_port = int(os.getenv("HEALTH_CHECK_PORT", "5000"))
-        start_health_check_server(health_port)
-        
         # Step 1: System check
         logger.info("🔍 Running pre-flight checks...")
         from system_check import SystemCheck
