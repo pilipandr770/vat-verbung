@@ -109,7 +109,6 @@ def main():
         logger.info("   • Press Ctrl+C to stop gracefully")
         logger.info("   • Check logs/promotion_hub.log for details")
         logger.info("   • Monitor database with SQL client")
-        logger.info(f"   • Health check available at http://localhost:{health_port}/health")
         logger.info("=" * 60 + "\n")
         
         # Run scheduler (blocking)
