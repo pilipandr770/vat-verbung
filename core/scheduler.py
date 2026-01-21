@@ -174,25 +174,22 @@ class Scheduler:
             
             # Генерація нового контенту з циклічним генератором (30 тем)
             generated_content = self.content_generator.generate_content()
-            title = generated_content.get("title", "")
-            description = generated_content.get("description", "")
+            content_de = generated_content.get("title", "")
+            content_adapted = generated_content.get("description", "")
             theme = generated_content.get("theme", "")
             
             # Збереження в БД
             post = Post(
                 channel="linkedin",
-                title=title,
-                description=description,
-                theme=theme,
-                status="published",
-                created_at=datetime.now(),
+                content_de=content_de,
+                content_adapted=content_adapted,
             )
             post.save()
             
             # Публікація на LinkedIn
             success = self.linkedin_publisher.publish_post({
-                "title": title,
-                "description": description
+                "title": content_de,
+                "description": content_adapted
             })
             
             if success:
@@ -217,25 +214,22 @@ class Scheduler:
             
             # Генерація нового контенту з циклічним генератором
             generated_content = self.content_generator.generate_content()
-            title = generated_content.get("title", "")
-            description = generated_content.get("description", "")
+            content_de = generated_content.get("title", "")
+            content_adapted = generated_content.get("description", "")
             theme = generated_content.get("theme", "")
             
             # Збереження в БД
             post = Post(
                 channel="telegram",
-                title=title,
-                description=description,
-                theme=theme,
-                status="published",
-                created_at=datetime.now(),
+                content_de=content_de,
+                content_adapted=content_adapted,
             )
             post.save()
             
             # Публікація на Telegram
             success = self.telegram_publisher.publish_post({
-                "title": title,
-                "description": description
+                "title": content_de,
+                "description": content_adapted
             })
             
             if success:
@@ -264,25 +258,22 @@ class Scheduler:
             
             # Генерація нового контенту з циклічним генератором
             generated_content = self.content_generator.generate_content()
-            title = generated_content.get("title", "")
-            description = generated_content.get("description", "")
+            content_de = generated_content.get("title", "")
+            content_adapted = generated_content.get("description", "")
             theme = generated_content.get("theme", "")
             
             # Збереження в БД
             post = Post(
                 channel="instagram",
-                title=title,
-                description=description,
-                theme=theme,
-                status="published",
-                created_at=datetime.now(),
+                content_de=content_de,
+                content_adapted=content_adapted,
             )
             post.save()
             
             # Публікація на Instagram
             success = self.instagram_publisher.publish_post({
-                "title": title,
-                "description": description
+                "title": content_de,
+                "description": content_adapted
             })
             
             if success:
