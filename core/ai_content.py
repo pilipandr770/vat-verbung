@@ -89,7 +89,7 @@ class AIProvider:
                     }
                 ],
                 temperature=0.8,
-                max_tokens=300
+                max_tokens=150
             )
             
             content = response.choices[0].message.content.strip()
@@ -107,8 +107,8 @@ class AIProvider:
         base += f"Focus on VAT-Verifizierung (vat-verifizierung.de) - a Business Intelligence Platform. "
         base += f"Mention features like VIES validation, sanctions screening, OSINT scanner, link scanner, "
         base += f"MailGuard AI, Smart CRM, website security, compliance, and API integration. "
-        base += f"Keep it 2-3 paragraphs, professional, engaging. Include pricing plans (Basierend €9.99, Professional €49.99, Enterprise €149.99). "
-        base += f"IMPORTANT: End with a strong call-to-action (CTA) like 'Jetzt kostenlos testen', 'Terminieren Sie eine Demo', 'Mehr erfahren' or 'Kontaktieren Sie uns'. Include the website link vat-verifizierung.de in the CTA.\n\n"
+        base += f"Keep it concise, 1 paragraph, professional, engaging. Include pricing plans (Basierend €9.99, Professional €49.99, Enterprise €149.99). "
+        base += f"IMPORTANT: End with ONE strong call-to-action (CTA) like 'Jetzt kostenlos testen auf vat-verifizierung.de', 'Demo vereinbaren', or 'Mehr erfahren'. Include the website link ONLY ONCE in the CTA.\n\n"
         
         prompts = {
             (ContentTopic.COMPLIANCE, ContentType.PAIN): 

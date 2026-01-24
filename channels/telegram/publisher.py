@@ -3,6 +3,7 @@
 """
 
 import os
+import asyncio
 import logging
 from typing import Optional
 from telegram import Bot
@@ -63,21 +64,25 @@ class TelegramPublisher:
         Returns:
             True якщо успішно
         """
-        try:
-            logger.info("Publishing text post to Telegram...")
+        async def _send_text():
+            try:
+                logger.info("Publishing text post to Telegram...")
+                
+                await self.bot.send_message(
+                    chat_id=self.channel_id,
+                    text=content,
+                    parse_mode="HTML",  # Підтримання HTML форматування
+                )
+                
+                logger.info("✅ Text post published successfully")
+                return True
             
-            self.bot.send_message(
-                chat_id=self.channel_id,
-                text=content,
-                parse_mode="HTML",  # Підтримання HTML форматування
-            )
-            
-            logger.info("✅ Text post published successfully")
-            return True
+            except TelegramError as e:
+                logger.error(f"Telegram error: {e}")
+                return False
         
-        except TelegramError as e:
-            logger.error(f"Telegram error: {e}")
-            return False
+        # Run async function in sync context
+        return asyncio.run(_send_text())
     
     def _publish_photo(self, caption: str, photo_url: str) -> bool:
         """
@@ -90,22 +95,62 @@ class TelegramPublisher:
         Returns:
             True якщо успішно
         """
-        try:
-            logger.info("Publishing photo post to Telegram...")
+        async def _send_photo():
+            try:
+                logger.info("Publishing photo post to Telegram...")
+                
+                # Extract a short caption (first 100 characters)
+                short_caption = caption[:100].rstrip() + "..." if len(caption) > 100 else caption
+                
+                # Send photo with short caption
+                await self.bot.send_photo(
+                    chat_id=self.channel_id,
+                    photo=photo_url,
+                    caption=short_caption,
+                    parse_mode="HTML",
+                )
+                
+                logger.info("✅ Photo sent successfully")
+                
+                # Send full content as separate message(s), split if too long
+                max_length = 4096
+                if len(caption) <= max_length:
+                    await self.bot.send_message(
+                        chat_id=self.channel_id,
+                        text=caption,
+                        parse_mode="HTML",
+                    )
+                else:
+                    # Split into chunks
+                    chunks = []
+                    current_chunk = ""
+                    for line in caption.split('\n'):
+                        if len(current_chunk) + len(line) + 1 > max_length:
+                            if current_chunk:
+                                chunks.append(current_chunk)
+                            current_chunk = line
+                        else:
+                            current_chunk += ('\n' if current_chunk else '') + line
+                    
+                    if current_chunk:
+                        chunks.append(current_chunk)
+                    
+                    for chunk in chunks:
+                        await self.bot.send_message(
+                            chat_id=self.channel_id,
+                            text=chunk,
+                            parse_mode="HTML",
+                        )
+                
+                logger.info("✅ Full content sent successfully")
+                return True
             
-            self.bot.send_photo(
-                chat_id=self.channel_id,
-                photo=photo_url,
-                caption=caption,
-                parse_mode="HTML",
-            )
-            
-            logger.info("✅ Photo post published successfully")
-            return True
+            except TelegramError as e:
+                logger.error(f"Telegram error: {e}")
+                return False
         
-        except TelegramError as e:
-            logger.error(f"Telegram error: {e}")
-            return False
+        # Run async function in sync context
+        return asyncio.run(_send_photo())
     
     def publish_article(
         self,

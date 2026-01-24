@@ -1,0 +1,15 @@
+from core.models import DatabaseConnection
+db = DatabaseConnection()
+with db.get_cursor() as cur:
+    cur.execute('SELECT id, channel, content_de, content_adapted, published_at FROM posts WHERE published = TRUE ORDER BY published_at DESC LIMIT 1')
+    post = cur.fetchone()
+    print('ПОСЛЕДНЯЯ ОПУБЛИКОВАННАЯ СТАТЬЯ:')
+    print(f'ID: {post["id"]}')
+    print(f'Канал: {post["channel"]}')
+    print(f'Время: {post["published_at"]}')
+    print()
+    print('КОНТЕНТ (content_de):')
+    print(post['content_de'])
+    print()
+    print('КОНТЕНТ (content_adapted):')
+    print(post['content_adapted'])

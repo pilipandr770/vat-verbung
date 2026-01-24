@@ -176,11 +176,11 @@ class Scheduler:
         try:
             logger.info("📌 Publishing to LinkedIn...")
             
-            # Генерація нового контенту з циклічним генератором (30 тем)
-            generated_content = self.content_generator.generate_content()
-            content_de = generated_content.get("title", "")
-            content_adapted = generated_content.get("description", "")
-            theme = generated_content.get("theme", "")
+            # Генерація нового контенту через AI (German)
+            content, topic, content_type = self.content_engine.generate_content(use_ai=True)
+            content_de = f"{topic.value.title()} - {content_type.value.title()}"
+            content_adapted = content
+            theme = f"{topic.value}/{content_type.value}"
             
             # Збереження в БД
             post = Post(
@@ -191,13 +191,13 @@ class Scheduler:
             post.save()
             
             # Публікація на LinkedIn
-            success = self.linkedin_publisher.publish_post({
-                "title": content_de,
-                "description": content_adapted
-            })
+            full_content = f"{content_de}\n\n{content_adapted}"
+            success = self.linkedin_publisher.publish_post(full_content)
             
             if success:
                 logger.info(f"✅ LinkedIn post published (ID: {post.id}) - Theme: {theme}")
+                # Позначаємо пост як опублікований в БД
+                post.mark_published()
                 action = Action(
                     action_type=ActionType.POST_PUBLISHED,
                     channel="linkedin",
@@ -216,11 +216,11 @@ class Scheduler:
         try:
             logger.info("📱 Publishing to Telegram...")
             
-            # Генерація нового контенту з циклічним генератором
-            generated_content = self.content_generator.generate_content()
-            content_de = generated_content.get("title", "")
-            content_adapted = generated_content.get("description", "")
-            theme = generated_content.get("theme", "")
+            # Генерація нового контенту через AI (German)
+            content, topic, content_type = self.content_engine.generate_content(use_ai=True)
+            content_de = f"{topic.value.title()} - {content_type.value.title()}"
+            content_adapted = content
+            theme = f"{topic.value}/{content_type.value}"
             
             # Збереження в БД
             post = Post(
@@ -230,14 +230,30 @@ class Scheduler:
             )
             post.save()
             
+            # Генерація зображення для поста
+            image_url = None
+            try:
+                logger.info(f"🎨 Generating image for theme: {theme} -> {topic}")
+                image_url = self.content_engine.generate_image(
+                    topic, 
+                    content_type, 
+                    description=f"{content_de} - {content_adapted[:100]}"
+                )
+                if image_url:
+                    logger.info(f"🖼️ Generated image for post {post.id}: {image_url}")
+                else:
+                    logger.warning(f"⚠️ No image generated for post {post.id}")
+            except Exception as e:
+                logger.warning(f"⚠️ Image generation failed: {e}")
+            
             # Публікація на Telegram
-            success = self.telegram_publisher.publish_post({
-                "title": content_de,
-                "description": content_adapted
-            })
+            full_content = f"{content_de}\n\n{content_adapted}"
+            success = self.telegram_publisher.publish_post(full_content, image_url)
             
             if success:
                 logger.info(f"✅ Telegram post published (ID: {post.id}) - Theme: {theme}")
+                # Позначаємо пост як опублікований в БД
+                post.mark_published()
                 action = Action(
                     action_type=ActionType.POST_PUBLISHED,
                     channel="telegram",
@@ -260,11 +276,11 @@ class Scheduler:
         try:
             logger.info("📸 Publishing to Instagram...")
             
-            # Генерація нового контенту з циклічним генератором
-            generated_content = self.content_generator.generate_content()
-            content_de = generated_content.get("title", "")
-            content_adapted = generated_content.get("description", "")
-            theme = generated_content.get("theme", "")
+            # Генерація нового контенту через AI (German)
+            content, topic, content_type = self.content_engine.generate_content(use_ai=True)
+            content_de = f"{topic.value.title()} - {content_type.value.title()}"
+            content_adapted = content
+            theme = f"{topic.value}/{content_type.value}"
             
             # Збереження в БД
             post = Post(
@@ -275,13 +291,13 @@ class Scheduler:
             post.save()
             
             # Публікація на Instagram
-            success = self.instagram_publisher.publish_post({
-                "title": content_de,
-                "description": content_adapted
-            })
+            full_content = f"{content_de}\n\n{content_adapted}"
+            success = self.instagram_publisher.publish_post(full_content)
             
             if success:
                 logger.info(f"✅ Instagram post published (ID: {post.id}) - Theme: {theme}")
+                # Позначаємо пост як опублікований в БД
+                post.mark_published()
                 action = Action(
                     action_type=ActionType.POST_PUBLISHED,
                     channel="instagram",
@@ -496,6 +512,14 @@ class Scheduler:
         try:
             logger.info("🚀 Promotion Hub Scheduler started")
             self.scheduler.start()
+            
+            # НЕМЕДЛЕННАЯ ПУБЛИКАЦИЯ В TELEGRAM ПРИ ЗАПУСКЕ
+            logger.info("📱 Publishing immediate Telegram post on startup...")
+            try:
+                self._publish_telegram()
+                logger.info("✅ Immediate Telegram publication completed")
+            except Exception as e:
+                logger.error(f"❌ Immediate Telegram publication failed: {e}")
             
             # Блокуючий цикл
             import time
