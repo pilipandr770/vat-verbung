@@ -9,6 +9,7 @@
 import logging
 from typing import Tuple, Dict, List
 from enum import Enum
+from .client_config import get_client_config
 
 logger = logging.getLogger(__name__)
 
@@ -22,31 +23,33 @@ class LeadDecision(str, Enum):
 
 class LeadScorer:
     """Оцінює релевантність лідів для B2B."""
-    
+
     def __init__(
         self,
-        threshold_save: float = 0.3,
-        threshold_invite: float = 0.6,
+        threshold_save: float = None,
+        threshold_invite: float = None,
     ):
         """
         Ініціалізація скорера.
-        
+
         Args:
-            threshold_save: Мінімальний скор для збереження
-            threshold_invite: Мінімальний скор для запрошення
+            threshold_save: Мінімальний скор для збереження (опционально)
+            threshold_invite: Мінімальний скор для запрошення (опционально)
         """
-        self.threshold_save = threshold_save
-        self.threshold_invite = threshold_invite
-        
-        # B2B ключові слова для пошуку
-        self.b2b_keywords = {
-            "business", "company", "enterprise", "b2b", "b2c",
-            "solutions", "services", "digital", "marketing",
-            "consulting", "agency", "management", "software",
-            "technology", "IT", "data", "analytics", "automation",
-            "entrepreneur", "ceo", "founder", "owner", "director",
-            "manager", "professional", "expert", "specialist",
-        }
+        # Загружаем конфигурацию клиента
+        config = get_client_config()
+
+        # Используем пороги из конфигурации, если не указаны явно
+        thresholds = config.get_scoring_thresholds()
+        self.threshold_save = threshold_save if threshold_save is not None else thresholds.get("save", 0.3)
+        self.threshold_invite = threshold_invite if threshold_invite is not None else thresholds.get("invite", 0.6)
+
+        # Загружаем B2B ключевые слова из конфигурации
+        self.b2b_keywords = config.get_b2b_keywords()
+
+        logger.info(f"LeadScorer initialized for client: {config.get_client_name()}")
+        logger.info(f"B2B keywords loaded: {len(self.b2b_keywords)} terms")
+        logger.info(f"Scoring thresholds: save={self.threshold_save}, invite={self.threshold_invite}")
     
     def score_lead(
         self,

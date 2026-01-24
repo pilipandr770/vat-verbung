@@ -1,0 +1,141 @@
+{
+  "client_info": {
+    "name": "VAT-Verifizierung",
+    "industry": "B2B Business Intelligence",
+    "website": "https://vat-verifizierung.de",
+    "tagline": "Komplette Business Intelligence Plattform - Mehr als nur VAT-Prüfung",
+    "target_audience": "German B2B companies, compliance officers, business intelligence professionals"
+  },
+
+  "b2b_keywords": {
+    "common": [
+      "business", "company", "enterprise", "b2b", "b2c",
+      "solutions", "services", "digital", "marketing",
+      "consulting", "agency", "management", "software",
+      "technology", "IT", "data", "analytics", "automation"
+    ],
+    "industry_specific": [
+      "compliance", "vat", "verification", "vies", "sanctions",
+      "osint", "business intelligence", "due diligence", "risk",
+      "validation", "screening", "monitoring", "crm", "firmenprofil",
+      "ust-idnr", "umsatzsteuer-identifikationsnummern", "vies-datenbank",
+      "sanktionslisten", "ofac", "eu-sanktionen", "uk-sanktionen",
+      "handelsregister", "insolvenzbekanntmachungen", "firmendaten",
+      "domain-analyse", "dns-records", "ssl-zertifikate", "whois",
+      "security-headers", "social-media-präsenz", "link-scanner",
+      "phishing", "malware", "virustotal", "google-safe-browsing",
+      "mailguard-ai", "email-verwaltung", "gmail-integration",
+      "outlook-integration", "smart-crm", "kontrahenten", "notizen",
+      "tags", "prüfungshistorie", "auto-fill", "ki-assistent",
+      "chatbot", "24/7-support", "website-security-scanner",
+      "schwachstellen-checks", "ssl/tls-analyse", "security-headers",
+      "verlauf-berichte", "compliance-berichte", "pdf-export",
+      "monitoring-alerts", "benachrichtigungen", "email-alerts",
+      "telegram-alerts", "rest-api", "api-integration", "white-label",
+      "custom-integration", "sla-garantie", "business-intelligence-plattform"
+    ],
+    "job_titles": [
+      "entrepreneur", "ceo", "founder", "owner", "director",
+      "manager", "professional", "expert", "specialist",
+      "consultant", "analyst", "officer", "head", "lead"
+    ],
+    "german_business_terms": [
+      "unternehmen", "firma", "geschäft", "betrieb", "handwerker",
+      "dienstleistung", "beratung", "entwicklung", "vertrieb", "einkauf",
+      "geschäftspartner", "kontrahenten", "umsatzsteuer", "steuerprüfung",
+      "risikomanagement", "compliance-prüfung", "due-diligence",
+      "geschäftskontakte", "firmenprofil", "unternehmensdaten",
+      "sicherheitsprüfung", "datenschutz", "dsgvo-konform",
+      "automatisierung", "digitalisierung", "business-intelligence",
+      "ki-gestützt", "künstliche-intelligenz", "maschinelles-lernen"
+    ]
+  },
+
+  "scoring_rules": {
+    "thresholds": {
+      "invite": 0.6,
+      "save": 0.3,
+      "block": 0.1
+    },
+    "weights": {
+      "b2b_keywords_bio": 0.35,
+      "b2b_keywords_messages": 0.25,
+      "follower_quality": 0.1,
+      "account_type": 0.15,
+      "follower_ratio": 0.2,
+      "activity_level": 0.1,
+      "engagement_rate": 0.1
+    },
+    "platform_multipliers": {
+      "instagram": 1.0,
+      "telegram": 0.9,
+      "linkedin": 1.1
+    }
+  },
+
+  "target_platforms": {
+    "instagram": {
+      "enabled": true,
+      "posts_per_day": 3,
+      "invites_per_day": 8,
+      "search_keywords": ["Bau", "Renovierung", "Immobilien", "Handwerker", "Baufirma"]
+    },
+    "telegram": {
+      "enabled": true,
+      "posts_per_day": 3,
+      "invites_per_day": 10,
+      "search_groups": ["Bau", "Renovierung", "Immobilien", "Handwerker", "Business"]
+    },
+    "linkedin": {
+      "enabled": true,
+      "posts_per_day": 2,
+      "invites_per_day": 0,
+      "passive_only": true
+    }
+  },
+
+  "collection_limits": {
+    "max_leads_per_job": 50,
+    "max_followers_per_account": 100,
+    "max_invites_per_lead": 1,
+    "min_follower_count": 50,
+    "max_follower_count": 100000
+  },
+
+  "safety_limits": {
+    "work_hours_start": 9,
+    "work_hours_end": 18,
+    "invitation_delay_min": 180,
+    "invitation_delay_max": 300,
+    "follow_delay_min": 10,
+    "follow_delay_max": 20,
+    "dm_delay_min": 30,
+    "dm_delay_max": 60
+  },
+
+  "ai_content_settings": {
+    "language": "DE",
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "fallback_to_static": true,
+    "max_retries": 3
+  },
+
+  "content_topics": [
+    "compliance",
+    "bi",
+    "verification",
+    "integration",
+    "security",
+    "efficiency",
+    "trust",
+    "data_quality"
+  ],
+
+  "monitoring": {
+    "enable_logging": true,
+    "log_level": "INFO",
+    "enable_metrics": true,
+    "alert_on_errors": true
+  }
+}

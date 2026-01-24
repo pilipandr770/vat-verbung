@@ -157,6 +157,28 @@ python test_telegram_search.py
 # Edit core/scheduler.py: chat_ids = [-1001234567890, ...]
 ```
 
+### 4. Testing Instagram Account Search
+
+```bash
+# 1. Ensure Instagram session is initialized
+# INSTAGRAM_USERNAME, INSTAGRAM_PASSWORD, INSTAGRAM_SESSION in .env
+
+# 2. Test account discovery by keywords
+python test_instagram_search.py
+
+# 3. Expected output: List of German construction/renovation accounts
+#    - Business accounts, bloggers, contractors, architects
+#    - Accounts with >500 followers, verified status
+#    - Keywords: Bau, Renovierung, Immobilien, Handwerker, etc.
+
+# 4. Test deep follower analysis (optional)
+# Edit test_instagram_search.py to call collect_from_found_accounts()
+# Analyze followers of discovered accounts for B2B potential
+
+# 5. Integration test: Feed results to analyzer
+# python -c "from channels.instagram.analyzer import InstagramAnalyzer; analyzer = InstagramAnalyzer(); print('Analyzer ready')"
+```
+
 ### 3. Testing Publishing
 
 **LinkedIn (requires Playwright headless browser):**
@@ -184,6 +206,12 @@ python test_telegram_search.py
 # Works locally but may hit IP blocks from Render
 # For production: Deploy to VPS with residential IP (see VPS_DEPLOYMENT.md)
 # Job runs: 09:00, 13:00, 19:00 UTC
+
+# NEW: Account Discovery Testing
+# 1. Test account search: python test_instagram_search.py
+# 2. Discover construction/renovation accounts automatically
+# 3. Analyze followers for B2B leads
+# 4. Feed to analyzer for scoring and invitations
 ```
 
 ---

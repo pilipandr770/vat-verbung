@@ -165,11 +165,25 @@ class TelegramCollector:
 ```python
 class InstagramCollector:
     Methods:
+    ├─ search_accounts(keywords, limit=10)
+    │  ├─ Input: ["Bau", "Renovierung", "Immobilien", "Handwerker"]
+    │  ├─ Searches: Instagram for accounts matching keywords
+    │  ├─ Filters: Business accounts, verified accounts, follower thresholds
+    │  ├─ Returns: List of relevant account usernames
+    │  └─ Status: ✅ NEW - Account Discovery
+    │
+    ├─ collect_from_found_accounts(found_accounts, max_followers=100)
+    │  ├─ Input: List of discovered account usernames
+    │  ├─ Extracts: Followers from discovered accounts
+    │  ├─ Gets: Extended metadata (full_name, media_count, biography, etc.)
+    │  ├─ Tracks: Source account for each follower
+    │  └─ Status: ✅ NEW - Deep Follower Analysis
+    │
     ├─ collect_from_similar_accounts(account_usernames)
     │  ├─ Input: ["@B2B_company", "@digital_marketing", "@startup_hub"]
     │  ├─ Extracts: Followers of these accounts (up to 100/account)
     │  ├─ Gets: username, user_id, bio, follower_count
-    │  └─ Status: ✅ READY
+    │  └─ Status: ✅ READY (Enhanced with configurable limits)
     │
     ├─ collect_from_comments(post_ids)
     │  ├─ Input: Instagram media IDs
@@ -182,11 +196,22 @@ class InstagramCollector:
        └─ Status: ✅ READY
 ```
 
-**Current Status:** ✅ FULLY IMPLEMENTED
-- Uses: `instagrapi` library
+**New Account Discovery Workflow:**
+1. **Discover:** `search_accounts(['Bau', 'Renovierung', 'Immobilien'])`
+2. **Analyze:** `collect_from_found_accounts(found_accounts, max_followers=200)`
+3. **Score:** Feed to InstagramAnalyzer for B2B scoring
+4. **Invite:** Send targeted invitations via InstagramInviter
+
+**German Construction Keywords:**
+- Bau, Renovierung, Immobilien, Handwerker
+- Baufirma, Sanierung, Architekt, Baumarkt
+- Innenausbau, Gebäudereinigung, Maler, Elektriker
+
+**Current Status:** ✅ FULLY IMPLEMENTED + ACCOUNT DISCOVERY
+- Uses: `instagrapi` library with rate limiting
 - Authenticates: With real Instagram account
-- Collects: 100-150 users per source
-- Data: Complete profile information
+- Collects: 100-200 users per source account
+- Data: Extended profile information with source tracking
 
 ---
 

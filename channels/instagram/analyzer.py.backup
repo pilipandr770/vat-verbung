@@ -24,13 +24,6 @@ class InstagramAnalyzer:
 
         logger.info(f"InstagramAnalyzer initialized for client: {config.get_client_name()}")
         logger.info(f"B2B keywords loaded: {len(self.b2b_keywords)} terms")
-
-    def analyze_profile(
-        self,
-        user_id: str,
-        username: str,
-        bio: str,
-        follower_count: int,
         following_count: int,
         is_private: bool,
         is_business: bool = False,
@@ -38,7 +31,7 @@ class InstagramAnalyzer:
     ) -> Dict:
         """
         Аналізує профіль користувача.
-
+        
         Args:
             user_id: ID користувача
             username: Username
@@ -48,84 +41,15 @@ class InstagramAnalyzer:
             is_private: Чи приватний акаунт
             is_business: Чи це бізнес-акаунт
             media_count: Кількість постів
-
+            
         Returns:
-            Результат аналізу з скором релевантності
+            Результат аналізу з скором і рекомендацією
         """
         score = 0.0
         reasons = []
-
+        
         # 1. Аналіз bio на B2B-ключові слова
         bio_lower = bio.lower()
-        b2b_keyword_count = sum(1 for kw in self.b2b_keywords if kw in bio_lower)
-
-        if b2b_keyword_count >= 3:
-            score += 0.35
-            reasons.append(f"Bio contains {b2b_keyword_count} B2B keywords (+0.35)")
-        elif b2b_keyword_count >= 1:
-            score += 0.2
-            reasons.append(f"Bio contains {b2b_keyword_count} B2B keywords (+0.2)")
-
-        # 2. Аналіз follower count
-        if 100 <= follower_count <= 100000:
-            score += 0.1
-            reasons.append(f"Good follower count: {follower_count} (+0.1)")
-        elif follower_count < 50:
-            reasons.append(f"Too few followers: {follower_count} (potential issue)")
-
-        # 3. Follower/following ratio
-        if following_count > 0:
-            ratio = follower_count / following_count
-            if ratio >= 1.5:
-                score += 0.2
-                reasons.append(f"Good follower ratio: {ratio:.1f} (+0.2)")
-            elif ratio < 0.5:
-                reasons.append(f"Poor follower ratio: {ratio:.1f} (potential spam)")
-
-        # 4. Business account bonus
-        if is_business:
-            score += 0.15
-            reasons.append("Business account (+0.15)")
-
-        # 5. Activity level
-        if media_count >= 10:
-            score += 0.1
-            reasons.append(f"Active posting: {media_count} posts (+0.1)")
-
-        # 6. Privacy check
-        if not is_private:
-            score += 0.05
-            reasons.append("Public profile (+0.05)")
-        else:
-            reasons.append("Private profile (limited analysis)")
-
-        # Нормалізація скору
-        final_score = max(0.0, min(1.0, score))
-
-        # Визначення рішення
-        if final_score >= self.scoring_thresholds.get("invite", 0.6):
-            decision = "invite"
-        elif final_score >= self.scoring_thresholds.get("save", 0.3):
-            decision = "save"
-        else:
-            decision = "skip"
-
-        return {
-            "platform": "instagram",
-            "user_id": user_id,
-            "username": username,
-            "score": final_score,
-            "decision": decision,
-            "reasons": reasons,
-            "metadata": {
-                "follower_count": follower_count,
-                "following_count": following_count,
-                "is_private": is_private,
-                "is_business": is_business,
-                "media_count": media_count,
-                "b2b_keywords_found": b2b_keyword_count,
-            }
-        }
         b2b_keyword_count = sum(1 for kw in self.b2b_keywords if kw in bio_lower)
         
         if b2b_keyword_count >= 3:

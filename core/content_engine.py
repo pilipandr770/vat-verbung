@@ -13,6 +13,7 @@ import random
 import logging
 from typing import List, Dict, Tuple, Optional
 from enum import Enum
+from .client_config import get_client_config
 
 logger = logging.getLogger(__name__)
 
@@ -39,15 +40,30 @@ class ContentType(str, Enum):
 
 class ContentEngine:
     """Генератор B2B-контенту німецькою мовою з AI-підтримкою."""
-    
+
     def __init__(self):
         """Ініціалізація контент-генератора."""
-        self.language = "de"
+        # Загружаем конфигурацию клиента
+        config = get_client_config()
+
+        self.language = config.get_ai_settings().get("language", "de")
         self.content_library = self._init_content_library()
-        self.topic_rotation = list(ContentTopic)
+
+        # Получаем доступные темы из конфигурации
+        available_topics = config.get_content_topics()
+        if available_topics:
+            # Фильтруем только темы, которые есть в enum
+            self.topic_rotation = [topic for topic in ContentTopic if topic.value in available_topics]
+        else:
+            # Если темы не указаны, используем все
+            self.topic_rotation = list(ContentTopic)
+
         self.content_type_rotation = list(ContentType)
         random.shuffle(self.topic_rotation)
         random.shuffle(self.content_type_rotation)
+
+        logger.info(f"ContentEngine initialized for client: {config.get_client_name()}")
+        logger.info(f"Available topics: {len(self.topic_rotation)} from {len(list(ContentTopic))} total")
         self.topic_index = 0
         self.type_index = 0
         
