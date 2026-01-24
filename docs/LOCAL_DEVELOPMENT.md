@@ -29,10 +29,16 @@ pip install -r requirements.txt
 **Your `.env` file is already configured with:**
 - ✅ `DATABASE_URL` - PostgreSQL on Render
 - ✅ All social media credentials (LinkedIn, Telegram, Instagram)
+- ✅ `TELEGRAM_API_ID` & `TELEGRAM_API_HASH` - For advanced Telegram features
 - ✅ API keys (OpenAI, Gemini)
 - ✅ `LOG_LEVEL=DEBUG` for development
 
-**No additional configuration needed!**
+**Optional: Add Telegram API credentials for group search:**
+```bash
+# Get from: https://my.telegram.org/auth
+TELEGRAM_API_ID=your_api_id
+TELEGRAM_API_HASH=your_api_hash
+```
 
 ### 3. Start Local Development
 
@@ -134,6 +140,23 @@ python scripts/add_test_leads.py
 # SELECT * FROM actions WHERE action_type = 'invite';
 ```
 
+### 3. Testing Telegram Group Search
+
+```bash
+# 1. Configure Telegram API credentials in .env
+# TELEGRAM_API_ID=your_api_id
+# TELEGRAM_API_HASH=your_api_hash
+
+# 2. Test group search
+python test_telegram_search.py
+
+# 3. Expected output: List of German construction/renovation groups
+#    - Baugruppen, Renovierung, Immobilien, Handwerker, etc.
+
+# 4. Add found group IDs to scheduler for lead collection
+# Edit core/scheduler.py: chat_ids = [-1001234567890, ...]
+```
+
 ### 3. Testing Publishing
 
 **LinkedIn (requires Playwright headless browser):**
@@ -148,6 +171,10 @@ python scripts/add_test_leads.py
 **Telegram (API-based, no credentials needed):**
 ```bash
 # Requires TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID in .env
+# Optional: TELEGRAM_API_ID and TELEGRAM_API_HASH for advanced features
+#   - Group search by keywords (Bau, Renovierung, Immobilien)
+#   - Lead collection from chats and channels
+#   - Automated group discovery and joining
 # Job runs: 08:00, 11:00, 14:00, 17:00, 20:00 UTC
 # Watch logs for publication success
 ```
@@ -254,6 +281,24 @@ pip install -r requirements.txt --force-reinstall
 
 # Jobs are scheduled in UTC, adjust for your timezone
 # Example: 08:00 UTC = 09:00 CET = 16:00 JST
+```
+
+### "Telegram API credentials incomplete"
+
+```bash
+# Required for advanced Telegram features (group search, etc.)
+# Get credentials from: https://my.telegram.org/auth
+
+# 1. Go to https://my.telegram.org/auth
+# 2. Log in with your phone number
+# 3. Go to "API development tools"
+# 4. Create application to get:
+#    - api_id: TELEGRAM_API_ID
+#    - api_hash: TELEGRAM_API_HASH
+
+# Add to .env:
+TELEGRAM_API_ID=your_api_id_here
+TELEGRAM_API_HASH=your_api_hash_here
 ```
 
 ### "Instagram IP blocked"
@@ -430,6 +475,46 @@ promotion_hub/
 
 - **Q: How to reset database for fresh testing?**  
   **A:** All tables auto-create from models. Drop tables manually in PostgreSQL if needed.
+
+---
+
+## 📱 Telegram API Credentials Setup
+
+**For advanced Telegram features (group search, lead collection):**
+
+### 1. Get API Credentials
+```bash
+# Go to: https://my.telegram.org/auth
+# 1. Log in with your phone number
+# 2. Go to "API development tools"
+# 3. Create new application
+# 4. Copy api_id and api_hash
+```
+
+### 2. Add to .env
+```bash
+TELEGRAM_API_ID=12345678
+TELEGRAM_API_HASH=abcdef1234567890abcdef1234567890
+```
+
+### 3. Test Group Search
+```bash
+python test_telegram_search.py
+```
+
+### 4. What You Get
+- 🔍 **Group Search:** Find German construction/renovation groups
+- 👥 **Lead Collection:** Extract contacts from chats and channels  
+- 🤖 **Auto Discovery:** Find and join relevant groups automatically
+- 📊 **B2B Targeting:** Focus on business contacts in construction sector
+
+**Keywords for German market:**
+- `Bau` (Construction)
+- `Renovierung` (Renovation) 
+- `Immobilien` (Real Estate)
+- `Handwerker` (Tradesmen)
+- `Baufirma` (Construction Company)
+- `Sanierung` (Refurbishment)
 
 ---
 

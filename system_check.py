@@ -60,6 +60,8 @@ class SystemCheck:
             'LINKEDIN_PASSWORD',
             'TELEGRAM_BOT_TOKEN',
             'TELEGRAM_CHANNEL_ID',
+            'TELEGRAM_API_ID',
+            'TELEGRAM_API_HASH',
             'INSTAGRAM_USERNAME',
             'INSTAGRAM_PASSWORD'
         ]
@@ -108,11 +110,20 @@ class SystemCheck:
         # Telegram
         tg_token = os.getenv('TELEGRAM_BOT_TOKEN')
         tg_channel = os.getenv('TELEGRAM_CHANNEL_ID')
+        tg_api_id = os.getenv('TELEGRAM_API_ID')
+        tg_api_hash = os.getenv('TELEGRAM_API_HASH')
+        
         if tg_token and not tg_token.startswith('your_') and tg_channel:
             logger.info(f"   ✅ Telegram: {tg_channel}")
             self.success_count += 1
         else:
-            self.warnings.append("Telegram credentials incomplete")
+            self.warnings.append("Telegram bot credentials incomplete")
+            
+        if tg_api_id and tg_api_hash and not tg_api_id.startswith('your_') and not tg_api_hash.startswith('your_'):
+            logger.info(f"   ✅ Telegram API: configured")
+            self.success_count += 1
+        else:
+            self.warnings.append("Telegram API credentials incomplete (needed for group search)")
         
         # Instagram
         ig_user = os.getenv('INSTAGRAM_USERNAME')
@@ -163,7 +174,8 @@ class SystemCheck:
             ('psycopg2', 'Database'),
             ('dotenv', 'Environment'),
             ('apscheduler', 'Scheduler'),
-            ('telegram', 'Telegram'),
+            ('telegram', 'Telegram Bot'),
+            ('telethon', 'Telegram API'),
             ('instagrapi', 'Instagram'),
             ('playwright', 'LinkedIn'),
             ('openai', 'OpenAI (Optional)'),
